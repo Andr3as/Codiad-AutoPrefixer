@@ -12,8 +12,7 @@
     var codiad  = global.codiad,
         scripts = document.getElementsByTagName('script'),
         path    = scripts[scripts.length-1].src.split('?')[0],
-        curpath = path.split('/').slice(0, -1).join('/')+'/',
-        Range   = ace.require('ace/range').Range;
+        curpath = path.split('/').slice(0, -1).join('/')+'/';
 
     $(function() {    
         codiad.Prefixer.init();
@@ -72,9 +71,7 @@
         //
         //////////////////////////////////////////////////////////
         command: function() {
-            var _this = this;
             var editor      = codiad.editor.getActive();
-            var session     = editor.getSession();
             var selText     = codiad.editor.getSelectedText();
             if (selText === "") {
                 codiad.editor.getActive().selectAll();
@@ -129,7 +126,27 @@
         },
 
         runPrefixer: function(content) {
-            return autoprefixer.process(content).css;
+            var options = this.getSettings();
+            return autoprefixer.process(content, options).css;
         },
+
+        getSettings: function() {
+            var options = {};
+            //Browsers
+            var browsers = localStorage.getItem('codiad.plugin.prefixer.browsers');
+            if (browsers !== null) {
+                browsers = browsers.split(',');
+                for (var i = 0; i < browsers.length; i++) {
+                    browsers[i] = browsers[i].trim();
+                }
+                options.browsers = browsers;
+            }
+            //Cascade
+            var cascade = localStorage.getItem('codiad.plugin.prefixer.cascade');
+            if (cascade !== null) {
+                options.cascade = (cascade == 'true');
+            }
+            return options;
+        }
     };
 })(this, jQuery);
