@@ -4,7 +4,7 @@
  * See http://opensource.org/licenses/MIT for more information. 
  * This information must remain intact.
  * @author Andr3as
- * @version 0.1.0
+ * @version 0.1.1
  */
 
 (function(global, $){
@@ -21,6 +21,7 @@
     codiad.Prefixer = {
 
         path: curpath,
+        error: {},
 
         init: function() {
             var _this       = this;
@@ -77,17 +78,23 @@
                 codiad.editor.getActive().selectAll();
             }
 
+            var result = true;
             if (editor.inMultiSelectMode) {
                 //Multiselection
                 var multiRanges = editor.multiSelect.getAllRanges();
                 for (var i = 0; i < multiRanges.length; i++) {
-                    this.runCommandForRange(multiRanges[i], this.runPrefixer.bind(this));
+                    result = result && this.runCommandForRange(multiRanges[i], this.runPrefixer.bind(this));
                 }
             } else {
                 //Singleselection
-                this.runCommandForRange(editor.getSelectionRange(), this.runPrefixer.bind(this));
+                result = this.runCommandForRange(editor.getSelectionRange(), this.runPrefixer.bind(this));
             }
-            return true;
+            if (result) {
+                codiad.message.success("AutoPrefixer executed");
+            } else {
+                codiad.message.error(this.error.message || "Failed to execute AutoPrefixer");
+            }
+            return result;
         },
 
         runCommandForRange: function(range, handler) {
@@ -114,6 +121,10 @@
             $.getJSON(this.path + 'controller.php?action=getContent&path='+ path, function(result){
                 if (result.status == "success") {
                     var prefixed = _this.runPrefixer(result.content);
+                    if (prefixed === false) {
+                        codiad.message.error(_this.error.message);
+                        return false;
+                    }
                     $.post(_this.path + 'controller.php?action=saveContent&path=' + path, {content: prefixed}, function(result){
                         result = JSON.parse(result);
                         codiad.message[result.status](result.message);
@@ -127,7 +138,12 @@
 
         runPrefixer: function(content) {
             var options = this.getSettings();
-            return autoprefixer.process(content, options).css;
+            try {
+                return autoprefixer.process(content, options).css;
+            } catch (error) {
+                this.error = error;
+                return false;
+            }
         },
 
         getSettings: function() {

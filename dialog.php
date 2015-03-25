@@ -6,6 +6,7 @@
 -->
 <form class="settings prefixer-settings">
     <label><span class="icon-traffic-cone big-icon"></span> AutoPrefixer options</label>
+    <hr>
     <table>
          <tr>
             <td><label>Supported browsers</label></td>
