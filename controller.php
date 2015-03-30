@@ -67,6 +67,6 @@
             //Windows absolute path
             return $path;
         }
-        return "../../workspace/".$path;
+        return WORKSPACE . "/".$path;
     }
 ?>
